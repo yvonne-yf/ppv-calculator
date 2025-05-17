@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>供需冲抵计算工具</title>
+    <style>
+        body { 
+            font-family: 'Microsoft YaHei', Arial, sans-serif; 
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .instructions {
+            background-color: #e3f2fd;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        .instructions h3 {
+            margin-top: 0;
+            color: #1565c0;
+        }
+        .instructions ol {
+            margin: 0;
+            padding-left: 20px;
+        }
+        .instructions li {
+            margin-bottom: 8px;
+        }
+        .instructions .note {
+            color: #d32f2f;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            .upload-section {
+                padding: 10px;
+            }
+            .preview-table {
+                font-size: 11px;
+            }
+            .preview-table th, .preview-table td {
+                padding: 4px;
+            }
+            button {
+                padding: 8px 15px;
+                font-size: 13px;
+            }
+            .instructions {
+                font-size: 13px;
+                padding: 10px;
+            }
+        }
+        h2 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #eee;
+        }
+        .upload-section {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+        .file-upload {
+            margin: 15px 0;
+            padding: 15px;
+            border: 2px dashed #ddd;
+            border-radius: 6px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        .file-upload:hover {
+            border-color: #4CAF50;
+            background-color: #f0f9f0;
+        }
+        input[type="file"] {
+            display: none;
+        }
+        .file-upload label {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .file-upload label:hover {
+            background-color: #45a049;
+        }
+        .upload-button {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            text-align: center;
+            border: none;
+        }
+        .upload-button:hover {
+            background-color: #45a049;
+        }
+        .uploaded-file-name {
+            font-size: 12px;
+            color: #555;
+            margin-top: 5px;
+            text-align: left;
+            word-break: break-all;
+        }
+        .preview-container {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            background-color: white;
+        }
+        .preview-container h4 {
+            color: #2c3e50;
+            margin-top: 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .preview-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            font-size: 12px;
+            /* min-width: 900px; */ /* 移除固定最小宽度 */
+            /* overflow-x: auto; */ /* 将滚动条应用到容器 */
+            /* display: block; */ /* 移除block显示 */
+        }
+        .preview-table th, .preview-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        .preview-table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+            white-space: nowrap;
+        }
+        .preview-table td {
+            white-space: nowrap;
+        }
+        .preview-table tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+        .preview-table tr:hover {
+            background-color: #f0f0f0;
+        }
+        .button-group {
+            text-align: center;
+            margin: 20px 0;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 0 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        #calculateBtn {
+            background-color: #2196F3;
+            color: white;
+        }
+        #calculateBtn:hover {
+            background-color: #1976D2;
+        }
+        #downloadResultBtn {
+            background-color: #4CAF50;
+            color: white;
+        }
+        #downloadResultBtn:hover {
+            background-color: #45a049;
+        }
+        .hidden {
+            display: none;
+        }
+        .data-info {
+            color: #666;
+            font-size: 12px;
+            margin-top: 5px;
+        }
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+        .status-message {
+            text-align: center;
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .status-message.success {
+            background-color: #dff0d8;
+            color: #3c763d;
+        }
+        .status-message.error {
+            background-color: #f2dede;
+            color: #a94442;
+        }
+        .status-message.info {
+            background-color: #e3f2fd;
+            color: #1565c0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>供需冲抵计算工具</h2>
+        
+        <div class="instructions">
+            <h3>使用说明</h3>
+            <ol>
+                <li>上传需求数据：点击"上传需求数据"按钮，选择包含需求信息的Excel文件</li>
+                <li>上传供应数据：点击"上传供应数据"按钮，选择包含供应信息的Excel文件</li>
+                <li>生成预览：点击"生成供应和需求数据预览"按钮，查看处理后的数据</li>
+                <li>生成冲抵：点击"生成冲抵结果"按钮，系统将自动计算冲抵结果</li>
+                <li>下载结果：可以分别下载处理后的需求数据、供应数据和冲抵结果</li>
+            </ol>
+            <div class="note">
+                注意：Excel文件必须包含以下字段：虚拟物料编码、虚拟物料名称、需求数量/供应数量、价格季度、订单编号、订单行号、父套餐编码、价格
+            </div>
+        </div>
+        
+        <div class="upload-section">
+            <h3>数据上传</h3>
+            <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 20px;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <input type="file" id="demandUpload" accept=".xlsx, .xls">
+                    <label for="demandUpload" class="upload-button">上传需求数据</label>
+                    <button type="button" id="clearDemandBtn" style="background:#f44336;color:#fff;">清空需求数据</button>
+                </div>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <input type="file" id="supplyUpload" accept=".xlsx, .xls">
+                    <label for="supplyUpload" class="upload-button">上传供应数据</label>
+                    <button type="button" id="clearSupplyBtn" style="background:#f44336;color:#fff;">清空供应数据</button>
+                </div>
+                <button id="generatePreviewBtn" class="hidden" style="background:#2196F3;color:#fff;min-width:180px;">生成供应和需求数据预览</button>
+                <button onclick="calculateOffset()" id="calculateBtn" class="hidden" style="background:#1976D2;color:#fff;min-width:120px;">生成冲抵结果</button>
+            </div>
+             <div id="demandFileName" class="uploaded-file-name"></div>
+             <div id="supplyFileName" class="uploaded-file-name"></div>
+        </div>
+
+        <div id="resultPreview" class="preview-container">
+             <h4>
+                 冲抵结果预览
+                 <button onclick="downloadResult()" id="downloadResultBtn" class="hidden">下载冲抵结果</button>
+             </h4>
+             <div id="resultTableContainer" style="overflow-x: auto;"></div>
+        </div>
+
+        <div class="data-preview">
+            <div id="demandPreview" class="preview-container">
+                <h4>
+                    需求数据预览
+                    <button onclick="downloadProcessedDemand()" class="hidden" id="downloadDemandBtn" style="padding: 6px 12px;">下载需求数据</button>
+                </h4>
+                <div id="demandTableContainer" style="overflow-x: auto;"></div>
+            </div>
+            
+            <div id="supplyPreview" class="preview-container">
+                <h4>
+                    供应数据预览
+                    <button onclick="downloadProcessedSupply()" class="hidden" id="downloadSupplyBtn" style="padding: 6px 12px;">下载供应数据</button>
+                </h4>
+                <div id="supplyTableContainer" style="overflow-x: auto;"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
+    <script>
+        let processedDemand = [];
+        let processedSupply = [];
+        let offsetResult = [];
+
+        // 进度条全局变量
+        let progressStatusDiv = null;
+
+        // 状态消息样式支持info，且每次只显示一个，3秒后自动消失
+        let lastStatusDiv = null;
+        function showStatus(message, type) {
+            if (lastStatusDiv) {
+                lastStatusDiv.remove();
+                lastStatusDiv = null;
+            }
+            const statusDiv = document.createElement('div');
+            statusDiv.className = `status-message ${type}`;
+            if(type === 'info'){
+                statusDiv.style.background = '#e3f2fd';
+                statusDiv.style.color = '#1565c0';
+            }
+            statusDiv.textContent = message;
+            const container = document.querySelector('.container');
+            container.insertBefore(statusDiv, container.firstChild);
+            lastStatusDiv = statusDiv;
+            setTimeout(() => {
+                if (lastStatusDiv === statusDiv) {
+                    statusDiv.remove();
+                    lastStatusDiv = null;
+                }
+            }, 3000);
+        }
+
+        // 字段标准化：将所有"虚拟部件"字段名统一为"虚拟物料"
+        function standardizeFields(data) {
+            return data.map(row => {
+                const newRow = {};
+                for (const key in row) {
+                    if (key.includes('虚拟部件')) {
+                        newRow[key.replace('虚拟部件', '虚拟物料')] = row[key];
+                    } else {
+                        newRow[key] = row[key];
+                    }
+                }
+                return newRow;
+            });
+        }
+
+        // 处理文件上传
+        function handleFile(e, type) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, {type: 'array'});
+                    const firstSheetName = workbook.SheetNames[0];
+                    const sheet = workbook.Sheets[firstSheetName];
+                    const jsonData = XLSX.utils.sheet_to_json(sheet);
+                    if(type === 'demand') {
+                        processedDemand = jsonData;
+                        document.getElementById('downloadDemandBtn').classList.add('hidden');
+                        document.getElementById('demandTableContainer').innerHTML = '';
+                        showStatus('需求数据已上传: ' + file.name, 'success');
+                        document.getElementById('demandFileName').textContent = '已上传：' + file.name;
+                    } else {
+                        processedSupply = jsonData;
+                        document.getElementById('downloadSupplyBtn').classList.add('hidden');
+                        document.getElementById('supplyTableContainer').innerHTML = '';
+                        showStatus('供应数据已上传: ' + file.name, 'success');
+                        document.getElementById('supplyFileName').textContent = '已上传：' + file.name;
+                    }
+                    document.getElementById('calculateBtn').classList.add('hidden');
+                    checkShowPreviewBtn();
+                } catch (error) {
+                    console.error('Error processing file:', error);
+                    showStatus('文件处理失败，请检查文件格式', 'error');
+                }
+            };
+            reader.onerror = () => {
+                showStatus('文件读取失败', 'error');
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        // 显示数据预览
+        function showPreview(data, containerId, type) {
+            const container = document.getElementById(containerId);
+            console.log(`调用 showPreview 函数，containerId: ${containerId}, type: ${type}, data length: ${data ? data.length : 0}`);
+            container.innerHTML = ''; // 清空容器内容
+            if (!data || data.length === 0) {
+                container.innerHTML += '<div class="loading">暂无数据</div>';
+                return;
+            }
+            // 优化表头顺序：需求顺序、虚拟物料编码、虚拟物料名称、需求数量、价格季度、订单编号、订单行号、父套餐编码、价格 ... 其余自动
+            let keys = Object.keys(data[0]);
+            if (type === '需求') {
+                const prefer = ['需求顺序','虚拟物料编码','虚拟物料名称','需求数量','价格季度','订单编号','订单行号','父套餐编码','价格'];
+                keys = prefer.concat(keys.filter(k => !prefer.includes(k)));
+            }
+            if (type === '供应') {
+                const prefer = ['供应顺序','虚拟物料编码','虚拟物料名称','供应数量','价格季度','订单编号','订单行号','父套餐编码','价格'];
+                keys = prefer.concat(keys.filter(k => !prefer.includes(k)));
+            }
+            const table = document.createElement('table');
+            table.className = 'preview-table';
+            // 创建表头
+            const thead = document.createElement('thead');
+            const headerRow = document.createElement('tr');
+            keys.forEach(key => {
+                const th = document.createElement('th');
+                th.textContent = key;
+                headerRow.appendChild(th);
+            });
+            thead.appendChild(headerRow);
+            table.appendChild(thead);
+            // 创建表格内容（限制前10行）
+            const tbody = document.createElement('tbody');
+            data.slice(0, 10).forEach(row => {
+                const tr = document.createElement('tr');
+                keys.forEach(key => {
+                    const td = document.createElement('td');
+                    td.textContent = row[key] === undefined ? '' : row[key];
+                    tr.appendChild(td);
+                });
+                tbody.appendChild(tr);
+            });
+            table.appendChild(tbody);
+            // 添加数据量提示
+            const info = document.createElement('div');
+            info.className = 'data-info';
+            info.textContent = `已加载${data.length}条记录，当前显示前10条`;
+            container.appendChild(info);
+            container.appendChild(table);
+        }
+
+        // 提取订单编号中的数字作为日期
+        function extractDateFromOrder(orderNo) {
+            if (!orderNo) return 0;
+            const match = String(orderNo).match(/\d+/g);
+            if (match && match.length > 0) {
+                // 取第一个数字作为日期
+                return parseInt(match[0], 10);
+            }
+            return 0;
+        }
+
+        // 处理需求数据
+        function processDemandData(data) {
+            // 字段兼容处理+添加序号
+            return data.map((row, index) => ({
+                sequence: index + 1,
+                ...standardizeFields(row)
+            })).sort((a, b) => {
+                // 新排序规则
+                const fields = [
+                    '价格季度',
+                    '日期', // 订单编号中提取的数字
+                    '订单编号',
+                    '订单行号'
+                ];
+                const aDate = extractDateFromOrder(a['订单编号']);
+                const bDate = extractDateFromOrder(b['订单编号']);
+                const compareArr = [
+                    [a['价格季度'], b['价格季度']],
+                    [aDate, bDate],
+                    [a['订单编号'], b['订单编号']],
+                    [a['订单行号'], b['订单行号']]
+                ];
+                for (let i = 0; i < compareArr.length; i++) {
+                    if (compareArr[i][0] !== compareArr[i][1]) {
+                        return compareArr[i][0] > compareArr[i][1] ? 1 : -1;
+                    }
+                }
+                return 0;
+            });
+        }
+
+        // 处理供应数据，并将BSR开头的行转移到需求数据
+        let bsrToDemandRows = [];
+        function processSupplyData(data) {
+            bsrToDemandRows = [];
+            // 字段兼容处理+添加序号
+            const filtered = [];
+            data.forEach((row, index) => {
+                const newRow = standardizeFields(row);
+                if (String(newRow['订单编号'] || '').startsWith('BSR')) {
+                    // 转为需求数据格式
+                    let demandRow = {};
+                    demandRow['虚拟物料编码'] = newRow['虚拟物料编码'] || '';
+                    demandRow['虚拟物料名称'] = newRow['虚拟物料名称'] || '';
+                    demandRow['需求数量'] = newRow['供应数量'] || '';
+                    [
+                        '价格季度',
+                        '订单编号',
+                        '订单行号',
+                        '父套餐编码',
+                        '价格'
+                    ].forEach(f => { if (f in newRow) demandRow[f] = newRow[f]; });
+                    bsrToDemandRows.push(demandRow);
+                } else {
+                    filtered.push({ sequence: index + 1, ...newRow });
+                }
+            });
+            // 新排序规则
+            return filtered.sort((a, b) => {
+                const aDate = extractDateFromOrder(a['订单编号']);
+                const bDate = extractDateFromOrder(b['订单编号']);
+                const compareArr = [
+                    [a['价格季度'], b['价格季度']],
+                    [aDate, bDate],
+                    [a['订单编号'], b['订单编号']],
+                    [a['订单行号'], b['订单行号']]
+                ];
+                for (let i = 0; i < compareArr.length; i++) {
+                    if (compareArr[i][0] !== compareArr[i][1]) {
+                        return compareArr[i][0] > compareArr[i][1] ? 1 : -1;
+                    }
+                }
+                return 0;
+            });
+        }
+
+        // 合并BSR转移的需求数据
+        function getAllDemandData() {
+            // 需求数据+BSR转移过来的
+            return processedDemand.concat(bsrToDemandRows).sort((a, b) => {
+                const compareFields = [
+                    '虚拟物料编码', '虚拟部件编码',
+                    '价格季度',
+                    '订单编号',
+                    '订单行号',
+                    '父套餐编码',
+                    '需求数量',
+                    '价格'
+                ];
+                for (const field of compareFields) {
+                    if ((a[field] || '') !== (b[field] || '')) {
+                        return (a[field] || '') > (b[field] || '') ? 1 : -1;
+                    }
+                }
+                return 0;
+            });
+        }
+
+        // 处理需求和供应数据，BSR转移前先标准化字段
+        let allDemandSorted = [];
+        let allSupplySorted = [];
+        function processAllData(demandRaw, supplyRaw) {
+            console.log('调用 processAllData 函数');
+            // 1. 字段标准化
+            const demandStd = standardizeFields(demandRaw);
+            const supplyStd = standardizeFields(supplyRaw);
+            // 2. 处理BSR转移
+            bsrToDemandRows = [];
+            const filteredSupply = [];
+            supplyStd.forEach(row => {
+                if (String(row['订单编号'] || '').startsWith('BSR')) {
+                    let demandRow = {};
+                    demandRow['虚拟物料编码'] = row['虚拟物料编码'] || '';
+                    demandRow['虚拟物料名称'] = row['虚拟物料名称'] || '';
+                    demandRow['需求数量'] = row['供应数量'] || '';
+                    [
+                        '价格季度',
+                        '订单编号',
+                        '订单行号',
+                        '父套餐编码',
+                        '价格'
+                    ].forEach(f => { if (f in row) demandRow[f] = row[f]; });
+                    bsrToDemandRows.push(demandRow);
+                } else {
+                    filteredSupply.push(row);
+                }
+            });
+            // 3. 合并需求数据
+            const allDemand = demandStd.concat(bsrToDemandRows);
+            // 4. 排序规则
+            function sortRule(a, b) {
+                const aDate = extractDateFromOrder(a['订单编号']);
+                const bDate = extractDateFromOrder(b['订单编号']);
+                const compareArr = [
+                    [a['虚拟物料编码'], b['虚拟物料编码']],
+                    [a['价格季度'], b['价格季度']],
+                    [aDate, bDate],
+                    [a['订单编号'], b['订单编号']],
+                    [a['订单行号'], b['订单行号']]
+                ];
+                for (let i = 0; i < compareArr.length; i++) {
+                    const valA = compareArr[i][0] === undefined || compareArr[i][0] === null ? '' : String(compareArr[i][0]);
+                    const valB = compareArr[i][1] === undefined || compareArr[i][1] === null ? '' : String(compareArr[i][1]);
+                    
+                    if (valA !== valB) {
+                        return valA > valB ? 1 : -1;
+                    }
+                }
+                return 0;
+            }
+            // 5. 排序并编号
+            allDemandSorted = allDemand.sort(sortRule).map((row, idx) => ({ ...row, 需求顺序: idx + 1 }));
+            allSupplySorted = filteredSupply.sort(sortRule).map((row, idx) => ({ ...row, 供应顺序: idx + 1 }));
+        }
+
+        // 计算冲抵结果时用新排序后的数据
+        function calculateOffset() {
+            try {
+                showProgressStatus('正在生成冲抵结果，请稍候... 0%');
+                const btn = document.getElementById('calculateBtn');
+                btn.disabled = true;
+                btn.textContent = '处理中...';
+                offsetResult = [];
+                // 先处理和排序数据
+                processAllData(processedDemand, processedSupply);
+                // 按虚拟物料编码分组
+                const demandGroups = groupBy(allDemandSorted, '虚拟物料编码');
+                const supplyGroups = groupBy(allSupplySorted, '虚拟物料编码');
+
+                let processedCount = 0;
+                const totalItems = allDemandSorted.length + allSupplySorted.length;
+
+                // 对每个物料编码组进行冲抵计算
+                for (const materialCode in demandGroups) {
+                    if (supplyGroups[materialCode]) {
+                        let currentDemandGroup = demandGroups[materialCode];
+                        let currentSupplyGroup = supplyGroups[materialCode];
+                        let demandIndex = 0;
+                        let supplyIndex = 0;
+
+                        while (demandIndex < currentDemandGroup.length && supplyIndex < currentSupplyGroup.length) {
+                            const demand = currentDemandGroup[demandIndex];
+                            const supply = currentSupplyGroup[supplyIndex];
+
+                            let demandQty = Math.abs(demand['需求数量']);
+                            let supplyQty = Math.abs(supply['供应数量']);
+
+                            // 处理上一轮冲抵的剩余数量
+                            if (demand.hasOwnProperty('_remaining')) demandQty = demand._remaining; else demand._remaining = demandQty;
+                            if (supply.hasOwnProperty('_remaining')) supplyQty = supply._remaining; else supply._remaining = supplyQty;
+
+                            const offsetQty = Math.min(demandQty, supplyQty);
+
+                            if (offsetQty > 0) {
+                                const result = {
+                                    '虚拟物料编码': materialCode,
+                                    '需求顺序': demand.需求顺序,
+                                    '供应顺序': supply.供应顺序,
+                                    '需求订单编号': demand['订单编号'],
+                                    '需求数量': demand['需求数量'],
+                                    '需求价格': demand['价格'],
+                                    '需求价格季度': demand['价格季度'],
+                                    '供应订单编号': supply['订单编号'],
+                                    '供应数量': supply['供应数量'],
+                                    '供应价格': supply['价格'],
+                                    '供应价格季度': supply['价格季度'],
+                                    '冲抵数量': offsetQty,
+                                    '需求参与冲抵数量': demand._remaining,
+                                    '供应参与冲抵数量': supply._remaining,
+                                    '需求冲抵剩余': demand._remaining - offsetQty,
+                                    '供应冲抵剩余': supply._remaining - offsetQty,
+                                    '剩余项': (demand._remaining - offsetQty > 0 ? '需求' : '') + (supply._remaining - offsetQty > 0 ? '供应' : ''),
+                                    '价差': (demand['价格'] || 0) - (supply['价格'] || 0),
+                                    'PPV': ((demand['价格'] || 0) - (supply['价格'] || 0)) * offsetQty,
+                                    '下一需求顺序': (demand._remaining - offsetQty > 0) ? demand.需求顺序 : (demandIndex < currentDemandGroup.length - 1 ? currentDemandGroup[demandIndex + 1].需求顺序 : ''),
+                                    '下一供应顺序': (supply._remaining - offsetQty > 0) ? supply.供应顺序 : (supplyIndex < currentSupplyGroup.length - 1 ? currentSupplyGroup[supplyIndex + 1].供应顺序 : '')
+                                };
+                                offsetResult.push(result);
+
+                                demand._remaining -= offsetQty;
+                                supply._remaining -= offsetQty;
+                            }
+
+                            // 根据剩余数量推进索引
+                            if (demand._remaining === 0) demandIndex++;
+                            if (supply._remaining === 0) supplyIndex++;
+
+                            processedCount++; // 简单估算进度
+                            const percent = Math.floor(100 * processedCount / totalItems);
+                            showProgressStatus(`正在生成冲抵结果，请稍候... ${percent}%`);
+                        }
+                    }
+                }
+
+                // 清理临时剩余属性
+                allDemandSorted.forEach(d => delete d._remaining);
+                allSupplySorted.forEach(s => delete s._remaining);
+
+                showResultPreview();
+                showStatus('冲抵结果计算完成', 'success');
+                btn.disabled = false;
+                btn.textContent = '生成冲抵结果';
+                hideProgressStatus();
+            } catch (error) {
+                showStatus('冲抵计算失败: ' + (error && error.message ? error.message : error), 'error');
+                document.getElementById('resultPreview').innerHTML = '<div class="loading" style="color:#a94442;">冲抵计算发生错误，请检查数据格式或联系管理员。</div>';
+            }
+        }
+
+        // 进度状态展示
+        function showProgressStatus(message) {
+            if (!progressStatusDiv) {
+                progressStatusDiv = document.createElement('div');
+                progressStatusDiv.className = 'status-message info';
+                const container = document.querySelector('.container');
+                container.insertBefore(progressStatusDiv, container.firstChild);
+            }
+            progressStatusDiv.textContent = message;
+        }
+        function hideProgressStatus() {
+            if (progressStatusDiv) {
+                progressStatusDiv.remove();
+                progressStatusDiv = null;
+            }
+        }
+
+        // 显示结果预览
+        function showResultPreview() {
+            const container = document.getElementById('resultPreview');
+            const resultTableContainer = document.getElementById('resultTableContainer');
+            resultTableContainer.innerHTML = ''; // 清空旧内容
+            
+            // 确保下载按钮样式统一并在结果预览标题旁边
+            const downloadBtn = container.querySelector('#downloadResultBtn');
+            if(downloadBtn) { // 检查按钮是否存在
+                 downloadBtn.style.padding = '6px 12px'; // 统一下载按钮样式
+            }
+            
+            if (!offsetResult || offsetResult.length === 0) {
+                resultTableContainer.innerHTML = '<div class="loading" style="color:#a94442;">无可冲抵数据，请检查上传文件内容或编码是否匹配。</div>';
+                document.getElementById('downloadResultBtn').classList.add('hidden');
+                return;
+            }
+            // 只展示前10行明细
+            const table = document.createElement('table');
+            table.className = 'preview-table';
+            const thead = document.createElement('thead');
+            const headerRow = document.createElement('tr');
+            Object.keys(offsetResult[0]).forEach(key => {
+                const th = document.createElement('th');
+                th.textContent = key;
+                headerRow.appendChild(th);
+            });
+            thead.appendChild(headerRow);
+            table.appendChild(thead);
+            const tbody = document.createElement('tbody');
+            offsetResult.slice(0, 10).forEach(row => {
+                const tr = document.createElement('tr');
+                Object.keys(offsetResult[0]).forEach(key => {
+                    const td = document.createElement('td');
+                    td.textContent = row[key] === undefined ? '' : row[key];
+                    tr.appendChild(td);
+                });
+                tbody.appendChild(tr);
+            });
+            table.appendChild(tbody);
+            const info = document.createElement('div');
+            info.className = 'data-info';
+            info.textContent = `共${offsetResult.length}条冲抵结果，当前显示前10条`;
+            resultTableContainer.appendChild(info);
+            resultTableContainer.appendChild(table);
+            document.getElementById('downloadResultBtn').classList.remove('hidden');
+        }
+
+        // 下载处理后的需求数据（包含BSR转移部分，按需求顺序排序）
+        function downloadProcessedDemand() {
+            try {
+                // 先处理和排序数据，确保allDemandSorted可用
+                processAllData(processedDemand, processedSupply);
+                const ws = XLSX.utils.json_to_sheet(allDemandSorted);
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, "处理后的需求数据");
+                XLSX.writeFile(wb, '处理后的需求数据.xlsx');
+                showStatus('需求数据下载成功', 'success');
+            } catch (error) {
+                console.error('Error downloading demand data:', error);
+                showStatus('下载失败', 'error');
+            }
+        }
+
+        // 下载处理后的供应数据（去除BSR部分，按供应顺序排序）
+        function downloadProcessedSupply() {
+            try {
+                // 先处理和排序数据，确保allSupplySorted可用
+                processAllData(processedDemand, processedSupply);
+                const ws = XLSX.utils.json_to_sheet(allSupplySorted);
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, "处理后的供应数据");
+                XLSX.writeFile(wb, '处理后的供应数据.xlsx');
+                showStatus('供应数据下载成功', 'success');
+            } catch (error) {
+                console.error('Error downloading supply data:', error);
+                showStatus('下载失败', 'error');
+            }
+        }
+
+        // 下载冲抵结果
+        function downloadResult() {
+            try {
+                const ws = XLSX.utils.json_to_sheet(offsetResult);
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, "冲抵结果");
+                XLSX.writeFile(wb, '冲抵结果.xlsx');
+                showStatus('冲抵结果下载成功', 'success');
+            } catch (error) {
+                console.error('Error downloading result:', error);
+                showStatus('下载失败', 'error');
+            }
+        }
+
+        // 绑定事件监听
+        document.getElementById('demandUpload').addEventListener('change', e => {
+            handleFile(e, 'demand');
+            checkShowPreviewBtn();
+        });
+        document.getElementById('supplyUpload').addEventListener('change', e => {
+            handleFile(e, 'supply');
+            checkShowPreviewBtn();
+        });
+        document.getElementById('clearDemandBtn').addEventListener('click', function() {
+            processedDemand = [];
+            document.getElementById('demandTableContainer').innerHTML = '';
+            document.getElementById('downloadDemandBtn').classList.add('hidden');
+            document.getElementById('calculateBtn').classList.add('hidden');
+            document.getElementById('demandFileName').textContent = '';
+            checkShowPreviewBtn();
+            showStatus('需求数据已清空', 'success');
+        });
+        document.getElementById('clearSupplyBtn').addEventListener('click', function() {
+            processedSupply = [];
+            document.getElementById('supplyTableContainer').innerHTML = '';
+            document.getElementById('downloadSupplyBtn').classList.add('hidden');
+            document.getElementById('calculateBtn').classList.add('hidden');
+            document.getElementById('supplyFileName').textContent = '';
+            checkShowPreviewBtn();
+            showStatus('供应数据已清空', 'success');
+        });
+        // 控制生成预览按钮显示
+        function checkShowPreviewBtn() {
+            const btn = document.getElementById('generatePreviewBtn');
+            if (processedDemand.length && processedSupply.length) {
+                btn.classList.remove('hidden');
+            } else {
+                btn.classList.add('hidden');
+            }
+        }
+        // 生成预览按钮逻辑
+        document.getElementById('generatePreviewBtn').addEventListener('click', function() {
+            console.log('生成预览按钮点击');
+            try {
+                // 处理和排序数据
+                console.log('开始处理数据...');
+                processAllData(processedDemand, processedSupply);
+                console.log('数据处理完成。', {allDemandSorted: allDemandSorted.length, allSupplySorted: allSupplySorted.length});
+                // 生成预览
+                console.log('开始生成需求数据预览...');
+                showPreview(allDemandSorted, 'demandTableContainer', '需求');
+                console.log('需求数据预览生成完成。');
+                console.log('开始生成供应数据预览...');
+                showPreview(allSupplySorted, 'supplyTableContainer', '供应');
+                console.log('供应数据预览生成完成。');
+                document.getElementById('downloadDemandBtn').classList.remove('hidden');
+                document.getElementById('downloadSupplyBtn').classList.remove('hidden');
+                // 只有生成预览后才允许计算冲抵
+                if (allDemandSorted.length > 0 && allSupplySorted.length > 0) {
+                    document.getElementById('calculateBtn').classList.remove('hidden');
+                }
+            } catch (error) {
+                console.error('生成预览时发生错误:', error);
+                showStatus('生成预览失败: ' + (error && error.message ? error.message : error), 'error');
+            }
+        });
+
+        // 辅助函数：按key对数组进行分组
+        function groupBy(arr, key) {
+            return arr.reduce((acc, item) => {
+                const groupKey = item[key] || '';
+                if (!acc[groupKey]) {
+                    acc[groupKey] = [];
+                }
+                acc[groupKey].push(item);
+                return acc;
+            }, {});
+        }
+    </script>
+</body>
+</html> 
